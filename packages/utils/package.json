@@ -28,13 +28,13 @@
   },
   "dependencies": {
     "@refref/coredb": "workspace:*",
-    "fastify": "^5.2.0",
+    "fastify": "^5.12.8",
     "fastify-plugin": "^5.0.1"
   },
   "devDependencies": {
     "@refref/typescript-config": "workspace:*",
     "@types/node": "^22.10.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.9"
+    "vitest": "^4.1.12"
   }
 }

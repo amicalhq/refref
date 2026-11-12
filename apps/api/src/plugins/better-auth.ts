@@ -2,6 +2,7 @@ import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import fp from "fastify-plugin";
 import { getAuth } from "@refref/auth";
 import { schema, type DBType } from "@refref/coredb";
+import { and, eq } from "drizzle-orm";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -9,7 +10,7 @@ declare module "fastify" {
       id: string;
       userId: string;
       organizationId: string | null;
-      permissions: string | null;
+      permissions: Record<string, string[]> | null;
       enabled: boolean | null;
       metadata?: {
         organizationId?: string;
@@ -77,14 +78,14 @@ const betterAuthPlugin = fp(
             },
           });
 
-          if (!result || !(result as any).apiKey) {
+          if (!result.valid || !result.key) {
             return reply.code(401).send({
               error: "Unauthorized",
               message: "Invalid API key",
             });
           }
 
-          const apiKeyData = (result as any).apiKey;
+          const apiKeyData = result.key;
 
           // Check if the API key is enabled
           if (!apiKeyData.enabled) {
@@ -98,7 +99,7 @@ const betterAuthPlugin = fp(
           const metadata = apiKeyData.metadata;
           const organizationId = metadata?.organizationId;
 
-          if (!organizationId) {
+          if (typeof organizationId !== "string" || !organizationId) {
             return reply.code(500).send({
               error: "Internal Server Error",
               message: "API key is missing organization context",
@@ -106,20 +107,40 @@ const betterAuthPlugin = fp(
           }
 
           // Validate that the API key has the required permissions for this organization
-          const permissions =
-            typeof apiKeyData.permissions === "string"
-              ? JSON.parse(apiKeyData.permissions)
-              : apiKeyData.permissions;
+          const permissions = apiKeyData.permissions;
 
           if (
             !permissions ||
             !permissions[organizationId] ||
-            !Array.isArray(permissions[organizationId])
+            !Array.isArray(permissions[organizationId]) ||
+            !permissions[organizationId].includes("full_access")
           ) {
             return reply.code(403).send({
               error: "Forbidden",
               message:
                 "API key does not have permissions for this organization",
+            });
+          }
+
+          // Metadata is caller-provided; bind access to the organization's service account.
+          const [owner] = await opts.db
+            .select({ id: schema.user.id })
+            .from(schema.orgUser)
+            .innerJoin(schema.user, eq(schema.orgUser.userId, schema.user.id))
+            .where(
+              and(
+                eq(schema.orgUser.orgId, organizationId),
+                eq(schema.user.id, apiKeyData.referenceId),
+                eq(schema.user.role, "service"),
+              ),
+            )
+            .limit(1);
+
+          if (!owner) {
+            return reply.code(403).send({
+              error: "Forbidden",
+              message:
+                "API key does not belong to the organization's service account",
             });
           }
 
@@ -138,15 +159,15 @@ const betterAuthPlugin = fp(
           // Attach API key info and context to request
           request.apiKey = {
             id: apiKeyData.id,
-            userId: apiKeyData.userId,
-            organizationId: apiKeyData.organizationId,
-            permissions: apiKeyData.permissions,
+            userId: apiKeyData.referenceId,
+            organizationId,
+            permissions,
             enabled: apiKeyData.enabled,
             metadata: metadata,
           };
 
           // Attach organization to request for route handlers
-          (request as any).organization = orgData;
+          request.organization = orgData;
         } catch (error) {
           request.log.error({ error }, "API key verification error");
           return reply.code(401).send({

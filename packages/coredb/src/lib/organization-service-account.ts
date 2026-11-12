@@ -176,7 +176,7 @@ export async function getApiKeysForOrganization(
   const keys = await db
     .select()
     .from(apikey)
-    .where(eq(apikey.userId, serviceAccount.id))
+    .where(eq(apikey.referenceId, serviceAccount.id))
     .orderBy(apikey.createdAt);
 
   // Redact keys and parse metadata
@@ -242,7 +242,7 @@ export async function deleteApiKeyForOrganization(
   // Delete the key only if it belongs to the organization's service account
   const result = await db
     .delete(apikey)
-    .where(and(eq(apikey.id, keyId), eq(apikey.userId, serviceAccount.id)))
+    .where(and(eq(apikey.id, keyId), eq(apikey.referenceId, serviceAccount.id)))
     .returning({ id: apikey.id });
 
   return result.length > 0;

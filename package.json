@@ -24,7 +24,11 @@
   },
   "pnpm": {
     "overrides": {
-      "@babel/core": "7.28.5"
+      "@babel/core": "7.28.5",
+      "happy-dom@<21.0.0": "21.0.4",
+      "better-call": "1.4.5",
+      "@types/react@>=19 <20": "19.3.0",
+      "@types/react-dom@>=19 <20": "19.3.0"
     }
   },
   "dependencies": {

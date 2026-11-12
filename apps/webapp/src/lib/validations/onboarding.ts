@@ -28,66 +28,65 @@ export const paymentProviders = [
 // ───────────────────────────────────────────────────────────────
 // Unified schema for the entire onboarding flow
 // ───────────────────────────────────────────────────────────────
-export const onboardingSchema = z
-  .object({
-    productName: z.string().min(1, "Product name is required").max(100),
-    productUrl: z
-      .string()
-      .min(1, "Website URL is required")
-      .transform((val) => {
-        // Add https:// if no protocol is specified
-        if (!val.match(/^https?:\/\//)) {
-          return `https://${val}`;
-        }
-        return val;
-      })
-      .pipe(z.url({ message: "Please enter a valid URL" })),
-    appType: z.enum(appTypes, {
-      message: "Please select an app type",
-    }),
-    useCase: z
-      .array(z.enum(useCases))
-      .min(1, "Please select at least one option"),
-    paymentProvider: z.enum(paymentProviders, {
-      message: "Please select a payment provider",
-    }),
-    otherPaymentProvider: z.string(),
-  })
-  .refine(
-    (data) => {
-      // If "other" is selected, otherPaymentProvider must be provided
-      if (data.paymentProvider === "other") {
-        return (
-          data.otherPaymentProvider &&
-          data.otherPaymentProvider.trim().length > 0
-        );
+const onboardingFields = z.object({
+  productName: z.string().min(1, "Product name is required").max(100),
+  productUrl: z
+    .string()
+    .min(1, "Website URL is required")
+    .transform((val) => {
+      // Add https:// if no protocol is specified
+      if (!val.match(/^https?:\/\//)) {
+        return `https://${val}`;
       }
-      return true;
-    },
-    {
-      message: "Please specify your payment provider",
-      path: ["otherPaymentProvider"],
-    },
-  );
+      return val;
+    })
+    .pipe(z.url({ message: "Please enter a valid URL" })),
+  appType: z.enum(appTypes, {
+    message: "Please select an app type",
+  }),
+  useCase: z
+    .array(z.enum(useCases))
+    .min(1, "Please select at least one option"),
+  paymentProvider: z.enum(paymentProviders, {
+    message: "Please select a payment provider",
+  }),
+  otherPaymentProvider: z.string(),
+});
+
+export const onboardingSchema = onboardingFields.refine(
+  (data) => {
+    // If "other" is selected, otherPaymentProvider must be provided
+    if (data.paymentProvider === "other") {
+      return (
+        data.otherPaymentProvider && data.otherPaymentProvider.trim().length > 0
+      );
+    }
+    return true;
+  },
+  {
+    message: "Please specify your payment provider",
+    path: ["otherPaymentProvider"],
+  },
+);
 
 // ───────────────────────────────────────────────────────────────
 // Step-level schemas derived from the master onboarding schema
 // ───────────────────────────────────────────────────────────────
 
-export const productInfoSchema = onboardingSchema.pick({
+export const productInfoSchema = onboardingFields.pick({
   productName: true,
   productUrl: true,
 });
 
-export const appTypeSchema = onboardingSchema.pick({
+export const appTypeSchema = onboardingFields.pick({
   appType: true,
 });
 
-export const useCaseSchema = onboardingSchema.pick({
+export const useCaseSchema = onboardingFields.pick({
   useCase: true,
 });
 
-export const paymentProviderSchema = onboardingSchema
+export const paymentProviderSchema = onboardingFields
   .pick({ paymentProvider: true, otherPaymentProvider: true })
   .refine(
     (data) => {

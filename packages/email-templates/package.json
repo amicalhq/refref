@@ -31,7 +31,7 @@
   "dependencies": {
     "@react-email/components": "^0.0.29",
     "@react-email/render": "^1.0.3",
-    "react": "^19.2.3"
+    "react": "^19.3.1"
   },
   "devDependencies": {
     "@refref/eslint-config": "workspace:*",

@@ -54,6 +54,7 @@ describe("@refref/id", () => {
         ["reward", "rwd"],
         ["productSecrets", "psec"],
         ["refcode", "rc"],
+        ["reflink", "rl"],
         ["referral", "ref"],
         ["event", "evt"],
         ["org", "org"],
@@ -97,9 +98,9 @@ describe("@refref/id", () => {
       expect(validTypes).toContain("program");
     });
 
-    it("should return all 21 entity types", () => {
+    it("should return all 22 entity types", () => {
       const validTypes = getValidEntityTypes();
-      expect(validTypes.length).toBe(21);
+      expect(validTypes.length).toBe(22);
     });
   });
 

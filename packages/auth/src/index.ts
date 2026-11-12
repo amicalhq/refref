@@ -1,6 +1,11 @@
-import { betterAuth } from "better-auth";
+import {
+  betterAuth,
+  type Auth as BetterAuthInstance,
+  type BetterAuthOptions,
+} from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { apiKey, magicLink, organization } from "better-auth/plugins";
+import { magicLink, organization } from "better-auth/plugins";
+import { apiKey } from "@better-auth/api-key";
 import {
   renderMagicLinkEmail,
   renderInvitationEmail,
@@ -86,7 +91,25 @@ export interface AuthConfig {
 /**
  * Creates a Better Auth instance with the provided configuration
  */
-export function getAuth(config: AuthConfig) {
+type RefRefAuthOptions = Pick<
+  BetterAuthOptions,
+  | "baseURL"
+  | "database"
+  | "socialProviders"
+  | "emailAndPassword"
+  | "trustedOrigins"
+  | "databaseHooks"
+> & {
+  plugins: [
+    ReturnType<typeof organization>,
+    ReturnType<typeof apiKey>,
+    ...ReturnType<typeof magicLink>[],
+  ];
+};
+
+export type Auth = BetterAuthInstance<RefRefAuthOptions>;
+
+export function getAuth(config: AuthConfig): Auth {
   const {
     baseURL,
     resendApiKey,
@@ -123,7 +146,7 @@ export function getAuth(config: AuthConfig) {
   // Initialize Resend for email sending
   const resend = new Resend(resendApiKey);
 
-  return betterAuth({
+  const options = {
     baseURL,
     socialProviders,
     database: drizzleAdapter(db, {
@@ -136,46 +159,7 @@ export function getAuth(config: AuthConfig) {
       enabled: enablePasswordAuth,
     },
     trustedOrigins,
-    emailProviders: {
-      resend: {
-        enabled: !!resendApiKey && resendApiKey !== "debug_key",
-        apiKey: resendApiKey || "debug_key",
-        autosignup: true,
-      },
-    },
     plugins: [
-      ...(enableMagicLinkAuth
-        ? [
-            magicLink({
-              sendMagicLink: async ({ email, url }) => {
-                try {
-                  logger?.info("Sending magic link email", { url, email });
-
-                  const emailContent = await renderMagicLinkEmail(url);
-
-                  await resend.emails.send({
-                    from: emailFrom,
-                    to: email,
-                    subject: "Your Magic Link to Sign In",
-                    html: emailContent,
-                  });
-
-                  logger?.info("Magic link email sent successfully", { email });
-                } catch (error) {
-                  console.error("Error sending magic link email", {
-                    error,
-                    email,
-                  });
-                  logger?.error("Error sending magic link email", {
-                    error,
-                    email,
-                  });
-                  throw error;
-                }
-              },
-            }),
-          ]
-        : []),
       organization({
         schema: {
           organization: {
@@ -375,7 +359,39 @@ export function getAuth(config: AuthConfig) {
         defaultPrefix: "prod_refref_key_",
         enableMetadata: true,
       }),
-    ],
+      ...(enableMagicLinkAuth
+        ? [
+            magicLink({
+              sendMagicLink: async ({ email, url }) => {
+                try {
+                  logger?.info("Sending magic link email", { url, email });
+
+                  const emailContent = await renderMagicLinkEmail(url);
+
+                  await resend.emails.send({
+                    from: emailFrom,
+                    to: email,
+                    subject: "Your Magic Link to Sign In",
+                    html: emailContent,
+                  });
+
+                  logger?.info("Magic link email sent successfully", { email });
+                } catch (error) {
+                  console.error("Error sending magic link email", {
+                    error,
+                    email,
+                  });
+                  logger?.error("Error sending magic link email", {
+                    error,
+                    email,
+                  });
+                  throw error;
+                }
+              },
+            }),
+          ]
+        : []),
+    ] satisfies RefRefAuthOptions["plugins"],
     databaseHooks: {
       user: {
         create: {
@@ -443,8 +459,7 @@ export function getAuth(config: AuthConfig) {
         },
       },
     },
-  });
-}
+  } satisfies BetterAuthOptions;
 
-// Export types
-export type Auth = ReturnType<typeof getAuth>;
+  return betterAuth<RefRefAuthOptions>(options);
+}

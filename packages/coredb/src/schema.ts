@@ -157,11 +157,12 @@ export const invitation = pgTable("invitation", {
 
 export const apikey = pgTable("apikey", {
   ...baseFields("apikey"),
+  configId: text("config_id").notNull().default("default"),
   name: text("name"),
   start: text("start"),
   prefix: text("prefix"),
   key: text("key").notNull(),
-  userId: text("user_id")
+  referenceId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   refillInterval: integer("refill_interval"),
