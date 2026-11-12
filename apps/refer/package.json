@@ -23,17 +23,17 @@
     "@refref/types": "workspace:*",
     "@refref/utils": "workspace:*",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.44.7",
-    "fastify": "^5.2.0",
-    "postgres": "^3.4.5"
+    "drizzle-orm": "^0.45.4",
+    "fastify": "^5.12.8",
+    "postgres": "^3.4.9"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "@vitest/ui": "^2.1.8",
+    "@vitest/ui": "^4.1.12",
     "pino-pretty": "^13.0.0",
     "playwright": "^1.49.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^4.1.12"
   }
 }

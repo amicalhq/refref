@@ -23,12 +23,12 @@
     "type:check": "tsc --noEmit"
   },
   "devDependencies": {
-    "@refref/typescript-config": "workspace:*",
     "@refref/eslint-config": "workspace:*",
+    "@refref/typescript-config": "workspace:*",
     "tsup": "^8.0.2",
     "typescript": "^5.9.2"
   },
   "dependencies": {
-    "zod": "^4.0.17"
+    "zod": "^4.6.7"
   }
 }

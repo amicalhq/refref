@@ -32,9 +32,9 @@
     "@paralleldrive/cuid2": "^2.2.2",
     "@refref/id": "workspace:*",
     "@refref/types": "workspace:*",
-    "drizzle-orm": "^0.44.7",
-    "postgres": "^3.4.5",
-    "zod": "^4.0.17"
+    "drizzle-orm": "^0.45.4",
+    "postgres": "^3.4.9",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
     "@refref/typescript-config": "workspace:*",

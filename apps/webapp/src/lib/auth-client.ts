@@ -1,10 +1,10 @@
 import { createAuthClient } from "better-auth/react";
 import {
   adminClient,
-  apiKeyClient,
   magicLinkClient,
   organizationClient,
 } from "better-auth/client/plugins";
+import { apiKeyClient } from "@better-auth/api-key/client";
 import { env } from "@/env";
 
 /**
